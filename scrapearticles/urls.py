@@ -22,3 +22,6 @@ urlpatterns = [
     path('api/', include('just_scrape.urls')),
     path('api-auth/', include('rest_framework.urls'))
 ]
+
+handler404 = 'just_scrape.views.error_404'
+handler500 = 'just_scrape.views.error_500'
