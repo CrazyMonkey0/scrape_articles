@@ -66,30 +66,33 @@ class Command(BaseCommand):
             page = browser.new_page()
 
             for url in urls:
-                page.goto(url)
-                # Tytuł
-                title = page.title()
-                # Artykuł z tagami html
-                orginal_article = page.inner_html('article')
-                # Artykuł bez tagów html
-                text_article = page.inner_text('article')
-                # Data publikacji
-                date_article = page.inner_text('time') if page.locator('time').count() > 0 else page.inner_text('article div p')
-                # Parsowanie daty
-                date_article = self.parse_date(date_article)
-                # Zapis do bazy / Walidacja
-                if not Article.objects.filter(url=url).exists():
-                    Article.objects.create(
-                                title=title,
-                                content=text_article,
-                                content_html=orginal_article,
-                                url=url,
-                                published_date=date_article
-                            )
-                    i+=1
-                    self.stdout.write(self.style.SUCCESS(f'Pomyślnie zapisano {i}/{len(urls)}: {title}'))
-                else:
-                    self.stdout.write(self.style.WARNING(f'Artykuł już istnieje: {title}'))
+                try:
+                    page.goto(url)
+                    # Tytuł
+                    title = page.title() if page.title() else "Brak tytułu"
+                    # Artykuł z tagami html
+                    orginal_article = page.inner_html('article')
+                    # Artykuł bez tagów html
+                    text_article = page.inner_text('article')
+                    # Data publikacji
+                    date_article = page.inner_text('time') if page.locator('time').count() > 0 else page.inner_text('article div p')
+                    # Parsowanie daty
+                    date_article = self.parse_date(date_article)
+                    # Zapis do bazy / Walidacja
+                    if not Article.objects.filter(url=url).exists():
+                        Article.objects.create(
+                                    title=title,
+                                    content=text_article,
+                                    content_html=orginal_article,
+                                    url=url,
+                                    published_date=date_article
+                                )
+                        i+=1
+                        self.stdout.write(self.style.SUCCESS(f'Pomyślnie zapisano {i}/{len(urls)}: {title}'))
+                    else:
+                        self.stdout.write(self.style.WARNING(f'Artykuł już istnieje: {title}'))
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f'Błąd przy przetwarzaniu {url}: {e}'))
         
             browser.close()
     
